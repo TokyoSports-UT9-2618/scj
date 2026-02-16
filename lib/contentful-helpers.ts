@@ -1,21 +1,21 @@
 import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
-import type { NewsEntry, News } from '@/types/contentful';
+import type { NewsEntry, News, NewsFields } from '@/types/contentful';
 
 // Contentful EntryをアプリのNews型に変換
 export function transformNewsEntry(entry: NewsEntry): News {
-  const fields = entry.fields;
+  const fields = entry.fields as NewsFields;
 
   return {
     id: entry.sys.id,
-    title: fields.title,
-    slug: fields.slug,
-    publishedAt: fields.publishedAt,
-    coverImage: fields.coverImage ? {
-      url: `https:${fields.coverImage.fields.file?.url}`,
-      title: fields.coverImage.fields.title || '',
-      description: fields.coverImage.fields.description,
-      width: fields.coverImage.fields.file?.details.image?.width || 0,
-      height: fields.coverImage.fields.file?.details.image?.height || 0,
+    title: fields.title || '',
+    slug: fields.slug || '',
+    publishedAt: fields.publishedAt || new Date().toISOString(),
+    coverImage: fields.coverImage?.fields?.file?.url ? {
+      url: `https:${fields.coverImage.fields.file.url}`,
+      title: (fields.coverImage.fields.title as string) || '',
+      description: (fields.coverImage.fields.description as string) || '',
+      width: ((fields.coverImage.fields.file.details as any)?.image?.width as number) || 0,
+      height: ((fields.coverImage.fields.file.details as any)?.image?.height as number) || 0,
     } : undefined,
     category: fields.category,
     bodyHtml: documentToHtmlString(fields.body),

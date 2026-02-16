@@ -1,4 +1,4 @@
-import { Entry, Asset } from 'contentful';
+import { Entry, Asset, EntrySkeletonType } from 'contentful';
 
 // Contentfulのメタデータ
 export interface ContentfulSys {
@@ -18,8 +18,11 @@ export interface NewsFields {
   metaDescription?: string;
 }
 
+// Contentful Entry Skeleton型 (SDK v10対応)
+export type NewsSkeleton = EntrySkeletonType<NewsFields, 'news'>;
+
 // Contentful Entry型として定義
-export type NewsEntry = Entry<NewsFields>;
+export type NewsEntry = Entry<NewsSkeleton, undefined, string>;
 
 // アプリ内で使用する整形済みNews型
 export interface News {

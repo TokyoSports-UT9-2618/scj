@@ -1,6 +1,6 @@
 import { contentfulClient, USE_MOCK_DATA } from './contentful';
 import { transformNewsEntry, MOCK_NEWS_DATA } from './contentful-helpers';
-import type { News, NewsEntry } from '@/types/contentful';
+import type { News, NewsEntry, NewsSkeleton } from '@/types/contentful';
 
 // ニュース一覧を取得
 export async function getAllNews(limit: number = 100): Promise<News[]> {
@@ -11,11 +11,11 @@ export async function getAllNews(limit: number = 100): Promise<News[]> {
   }
 
   try {
-    const response = await contentfulClient!.getEntries<NewsEntry['fields']>({
+    const response = await contentfulClient!.getEntries<NewsSkeleton>({
       content_type: 'news',
       limit,
       order: ['-fields.publishedAt'],
-    });
+    } as any);
 
     return response.items.map((item) => transformNewsEntry(item as NewsEntry));
   } catch (error) {
@@ -34,11 +34,11 @@ export async function getNewsBySlug(slug: string): Promise<News | null> {
   }
 
   try {
-    const response = await contentfulClient!.getEntries<NewsEntry['fields']>({
+    const response = await contentfulClient!.getEntries<NewsSkeleton>({
       content_type: 'news',
       'fields.slug': slug,
       limit: 1,
-    });
+    } as any);
 
     if (response.items.length === 0) {
       return null;
