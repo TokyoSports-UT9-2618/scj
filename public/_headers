@@ -1,0 +1,39 @@
+# Cloudflare Pages用のHTTPヘッダー設定
+
+# 全ページ共通のセキュリティヘッダー
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+
+# 静的アセット（JS/CSS/画像）のキャッシュ設定
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# フォントファイルのキャッシュ
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 画像のキャッシュ（1週間）
+/*.jpg
+  Cache-Control: public, max-age=604800
+
+/*.jpeg
+  Cache-Control: public, max-age=604800
+
+/*.png
+  Cache-Control: public, max-age=604800
+
+/*.gif
+  Cache-Control: public, max-age=604800
+
+/*.webp
+  Cache-Control: public, max-age=604800
+
+/*.svg
+  Cache-Control: public, max-age=604800
+
+# HTMLページは短めのキャッシュ（10分）
+/*.html
+  Cache-Control: public, max-age=600
