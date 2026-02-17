@@ -1,58 +1,88 @@
 import Link from 'next/link';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-gray-900 text-white mt-auto">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* 団体情報 */}
-          <div>
-            <h3 className="text-lg font-bold mb-4">一般財団法人日本スポーツコミッション</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+    <footer className="bg-navy-900 text-white mt-auto">
+      <div className="container mx-auto px-4 md:px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Organization Info */}
+          <div className="lg:col-span-2">
+            <h3 className="text-xl font-bold mb-6 text-white tracking-wide">
+              一般財団法人<br />日本スポーツコミッション
+            </h3>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-md">
               まちづくり・地域づくりの視点からスポーツを活用した
-              地域の活性化を図る調査研究・活動組織
+              地域の活性化を図る調査研究・活動組織です。
             </p>
+            <address className="text-gray-400 text-sm not-italic leading-relaxed">
+              〒166-0011<br />
+              東京都杉並区梅里2丁目1-19 ライブラフラット701<br />
+              <a href="mailto:info@sportscommission.or.jp" className="text-accent-gold hover:text-white transition-colors mt-2 inline-block">
+                info@sportscommission.or.jp
+              </a>
+            </address>
           </div>
 
-          {/* リンク */}
+          {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold mb-4">リンク</h3>
-            <ul className="space-y-2 text-sm">
+            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">コンテンツ</h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/about" className="text-gray-300 hover:text-accent-gold transition-colors">
                   私たちについて
                 </Link>
               </li>
               <li>
-                <Link href="/news" className="text-gray-400 hover:text-white transition-colors">
-                  ニュース
+                <Link href="/projects" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  実績一覧
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
-                  お問い合わせ
+                <Link href="/seminars" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  研究会・セミナー
+                </Link>
+              </li>
+              <li>
+                <Link href="/news" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  ニュース
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* お問い合わせ */}
+          {/* Utility Links */}
           <div>
-            <h3 className="text-lg font-bold mb-4">お問い合わせ</h3>
-            <address className="text-gray-400 text-sm not-italic leading-relaxed">
-              〒166-0011<br />
-              東京都杉並区梅里2丁目1-19<br />
-              ライブラフラット701<br />
-              <a href="mailto:info@sportscommission.or.jp" className="hover:text-white transition-colors">
-                info@sportscommission.or.jp
-              </a>
-            </address>
+            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">その他</h4>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/members" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  会員専用ページ
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  お問い合わせ
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  プライバシーポリシー
+                </Link>
+              </li>
+              <li>
+                <Link href="/trademarks" className="text-gray-300 hover:text-accent-gold transition-colors">
+                  商標について
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} 一般財団法人日本スポーツコミッション. All rights reserved.</p>
-          <p className="mt-2 text-xs">Powered by Next.js + Newt CMS</p>
+        <div className="border-t border-navy-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+          <p>&copy; {currentYear} Japan Sports Commission. All rights reserved.</p>
+          <p className="mt-2 md:mt-0">Powered by Next.js & Contentful</p>
         </div>
       </div>
     </footer>
