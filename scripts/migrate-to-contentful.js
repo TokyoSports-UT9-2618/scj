@@ -96,15 +96,25 @@ async function main() {
   try {
     // 1. WordPressから記事取得 (User-Agent付き)
     console.log('📥 WordPressから記事を取得中...');
-    const response = await fetch(`${WP_API_BASE}/posts?per_page=100`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-      }
-    });
-
-    if (!response.ok) throw new Error(`WP APIエラー: ${response.status}`);
-    const posts = await response.json();
-    console.log(`✅ ${posts.length}件の記事を取得しました。`);
+    // 全記事をページングで取得
+    let posts = [];
+    let page = 1;
+    while (true) {
+      const response = await fetch(`${WP_API_BASE}/posts?per_page=100&page=${page}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+        }
+      });
+      if (response.status === 400) break; // ページ終端
+      if (!response.ok) throw new Error(`WP APIエラー: ${response.status}`);
+      const batch = await response.json();
+      if (batch.length === 0) break;
+      posts = posts.concat(batch);
+      console.log(`  ページ${page}: ${batch.length}件取得`);
+      if (batch.length < 100) break; // 最終ページ
+      page++;
+    }
+    console.log(`✅ 合計${posts.length}件の記事を取得しました。`);
 
     // 2. Contentful接続
     const client = contentful.createClient({ accessToken: MANAGEMENT_TOKEN });
