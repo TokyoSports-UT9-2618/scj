@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Noto_Serif_JP } from 'next/font/google';
 import { PROJECT_GROUPS } from '@/lib/projects-data';
+import { BOOKS_DATA, BOOK_TYPE_LABEL } from '@/lib/books-data';
 
 const notoSerifJP = Noto_Serif_JP({
   weight: ['400', '700'],
@@ -35,6 +36,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const idx = PROJECT_GROUPS.indexOf(group);
   const prev = idx > 0 ? PROJECT_GROUPS[idx - 1] : null;
   const next = idx < PROJECT_GROUPS.length - 1 ? PROJECT_GROUPS[idx + 1] : null;
+
+  // 出版事業ページ判定
+  const isPublishing = id === 'publishing';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -86,9 +90,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
           <div className="grid lg:grid-cols-3 gap-10">
 
             {/* メインコンテンツ */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-8">
               {/* 概要 */}
-              <div className="bg-white rounded-xl border border-gray-100 p-8 mb-8 shadow-sm">
+              <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
                 <h2 className={`text-xl font-bold text-navy-900 mb-4 ${notoSerifJP.className}`}>
                   事業概要
                 </h2>
@@ -97,33 +101,71 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </p>
               </div>
 
-              {/* 主な実績 */}
-              <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
-                <h2 className={`text-xl font-bold text-navy-900 mb-6 ${notoSerifJP.className}`}>
-                  主な実績
-                </h2>
-                <ul className="space-y-4">
-                  {group.highlights.map((item, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <span
-                        className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5"
-                        style={{ backgroundColor: group.color }}
-                      >
-                        {i + 1}
-                      </span>
-                      <span className="text-gray-700 leading-relaxed">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {/* ── 出版事業のみ: 書籍・冊子ギャラリー ── */}
+              {isPublishing && (
+                <div className="space-y-6">
+                  {/* 書籍セクション */}
+                  <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
+                    <h2 className={`text-xl font-bold text-navy-900 mb-8 flex items-center gap-3 ${notoSerifJP.className}`}>
+                      <svg className="w-6 h-6 text-accent-gold" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      書籍
+                    </h2>
+                    <div className="grid gap-10">
+                      {BOOKS_DATA.filter(b => b.type === 'book').sort((a, b) => b.yearNum - a.yearNum).map((book) => (
+                        <BookCard key={book.id} book={book} accentColor={group.color} />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 冊子・論文セクション */}
+                  <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
+                    <h2 className={`text-xl font-bold text-navy-900 mb-6 flex items-center gap-3 ${notoSerifJP.className}`}>
+                      <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      冊子・論文・寄稿
+                    </h2>
+                    <div className="space-y-4">
+                      {BOOKS_DATA.filter(b => b.type !== 'book').sort((a, b) => b.yearNum - a.yearNum).map((book) => (
+                        <BookletRow key={book.id} book={book} accentColor={group.color} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── 出版事業以外: 主な実績リスト ── */}
+              {!isPublishing && (
+                <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
+                  <h2 className={`text-xl font-bold text-navy-900 mb-6 ${notoSerifJP.className}`}>
+                    主な実績
+                  </h2>
+                  <ul className="space-y-4">
+                    {group.highlights.map((item, i) => (
+                      <li key={i} className="flex items-start gap-4">
+                        <span
+                          className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5"
+                          style={{ backgroundColor: group.color }}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className="text-gray-700 leading-relaxed">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* 詳細は元サイトへ */}
-              <div className="mt-8 p-6 bg-navy-900/5 rounded-xl border border-navy-900/10">
+              <div className="p-6 bg-navy-900/5 rounded-xl border border-navy-900/10">
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">
                   各年度の詳細な活動内容・実績については、元サイトの実績紹介ページをご覧ください。
                 </p>
                 <a
-                  href={`https://sportscommission.or.jp/%e5%ae%9f%e7%b8%be%e4%b8%80%e8%a6%a7/`}
+                  href="https://sportscommission.or.jp/%e5%ae%9f%e7%b8%be%e4%b8%80%e8%a6%a7/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-navy-900 font-bold hover:text-blue-700 transition-colors text-sm"
@@ -226,6 +268,129 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             ) : <div />}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 書籍カード（横並び・表紙画像あり） ─────────────────────────────
+function BookCard({ book, accentColor }: { book: (typeof BOOKS_DATA)[number]; accentColor: string }) {
+  return (
+    <div className="flex gap-6 group pb-8 border-b border-gray-100 last:border-0 last:pb-0">
+      {/* 表紙画像エリア */}
+      <div className="shrink-0 w-28 md:w-36">
+        {book.coverImage ? (
+          <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-lg
+                          group-hover:shadow-xl transition-shadow duration-300 border border-gray-200">
+            <Image
+              src={book.coverImage}
+              alt={`${book.title} 表紙`}
+              fill
+              sizes="144px"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+        ) : (
+          <div
+            className="aspect-[3/4] rounded-lg shadow-lg flex flex-col items-center justify-center
+                       text-white p-3 text-center"
+            style={{ background: `linear-gradient(145deg, ${accentColor}dd, ${accentColor}88)` }}
+          >
+            <svg className="w-8 h-8 mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <p className="text-xs font-bold leading-tight opacity-90">{book.title}</p>
+          </div>
+        )}
+      </div>
+
+      {/* 書誌情報 */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <span
+          className="inline-block text-xs font-bold px-2 py-0.5 rounded text-white mb-3 self-start"
+          style={{ backgroundColor: accentColor }}
+        >
+          {book.year}
+        </span>
+        <h3 className="text-xl font-bold text-navy-900 mb-1 leading-tight">
+          {book.title}
+        </h3>
+        <p className="text-sm text-gray-500 mb-3">{book.authors}</p>
+        <p className="text-sm text-gray-600 leading-relaxed mb-4">
+          {book.description}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          {book.publisherUrl && (
+            <a
+              href={book.publisherUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-900
+                         border border-navy-900/20 bg-white px-3 py-1.5 rounded-full
+                         hover:bg-navy-900 hover:text-white transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {book.publisher}
+            </a>
+          )}
+          {book.amazonUrl && (
+            <a
+              href={book.amazonUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-700
+                         border border-orange-200 px-3 py-1.5 rounded-full bg-orange-50
+                         hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              Amazonで見る
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 冊子・論文 行形式 ───────────────────────────────────────────────
+function BookletRow({ book, accentColor }: { book: (typeof BOOKS_DATA)[number]; accentColor: string }) {
+  const typeLabel = BOOK_TYPE_LABEL[book.type];
+  return (
+    <div className="flex gap-4 p-5 rounded-xl border border-gray-100 hover:border-gray-200
+                    hover:shadow-sm transition-all">
+      {/* アイコン */}
+      <div
+        className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-white"
+        style={{ backgroundColor: accentColor }}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      {/* 内容 */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <span className="text-xs text-gray-400">{book.year}</span>
+          <span
+            className="text-xs px-1.5 py-0.5 rounded font-bold text-white"
+            style={{ backgroundColor: accentColor, opacity: 0.85 }}
+          >
+            {typeLabel}
+          </span>
+        </div>
+        <h3 className="font-bold text-navy-900 leading-snug mb-1 text-sm md:text-base">
+          {book.title}
+        </h3>
+        <p className="text-xs text-gray-500 mb-1">{book.authors}　／　{book.publisher}</p>
+        <p className="text-sm text-gray-600 leading-relaxed">{book.description}</p>
       </div>
     </div>
   );
