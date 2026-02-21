@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 export default function Header() {
@@ -27,9 +28,13 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <span className="text-2xl font-bold text-navy-900 group-hover:text-navy-800 transition-colors">
-              SCJ
-            </span>
+            <Image
+              src="/logo.png"
+              alt="SCJ ロゴ"
+              width={52}
+              height={52}
+              className="transition-opacity group-hover:opacity-80"
+            />
             <span className="hidden sm:block text-xs text-gray-500 leading-tight">
               一般財団法人<br />日本スポーツコミッション
             </span>
