@@ -1,15 +1,27 @@
 import { documentToHtmlString } from '@contentful/rich-text-html-renderer';
 import type { NewsEntry, News, NewsFields } from '@/types/contentful';
 
+// slugが空の場合に自動生成: post-YYYY-MM-DD-xxxx（sys.idの末尾4文字）
+function generateSlug(publishedAt: string, sysId: string): string {
+  const date = new Date(publishedAt);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const suffix = sysId.slice(-4).toLowerCase();
+  return `post-${yyyy}-${mm}-${dd}-${suffix}`;
+}
+
 // Contentful EntryをアプリのNews型に変換
 export function transformNewsEntry(entry: NewsEntry): News {
   const fields = entry.fields as NewsFields;
+  const publishedAt = fields.publishedAt || entry.sys.createdAt;
+  const slug = fields.slug || generateSlug(publishedAt, entry.sys.id);
 
   return {
     id: entry.sys.id,
     title: fields.title || '',
-    slug: fields.slug || '',
-    publishedAt: fields.publishedAt || new Date().toISOString(),
+    slug,
+    publishedAt,
     coverImage: fields.coverImage?.fields?.file?.url ? {
       url: `https:${fields.coverImage.fields.file.url}`,
       title: (fields.coverImage.fields.title as string) || '',

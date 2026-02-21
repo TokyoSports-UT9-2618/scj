@@ -20,7 +20,7 @@ export type ProjectCategoryId =
 // ニュース記事のフィールド型
 export interface NewsFields {
   title: string;
-  slug: string;
+  slug?: string; // 非表示・自動生成のためOptionalに変更
   publishedAt: string;
   coverImage?: Asset;
   category?: 'お知らせ' | 'イベント' | 'レポート' | 'その他';
