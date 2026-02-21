@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCJ セミナー登録</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  header { background: #1a1a2e; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  header span { font-size: 12px; color: #c9a84c; background: #c9a84c22; padding: 3px 10px; border-radius: 99px; }
+
+  main { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+
+  /* ── STEP カード ── */
+  .card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 1px 4px #0001; }
+  .card-title { font-size: 13px; font-weight: 700; color: #c9a84c; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 14px; }
+
+  /* ── ドロップゾーン ── */
+  #drop-zone {
+    border: 2px dashed #c9a84c; border-radius: 10px; padding: 48px;
+    text-align: center; cursor: pointer; transition: background .2s;
+  }
+  #drop-zone.over { background: #c9a84c11; }
+  #drop-zone p { color: #666; font-size: 15px; margin-top: 8px; }
+  #drop-zone .icon { font-size: 48px; }
+  #file-name { margin-top: 10px; font-size: 13px; color: #c9a84c; font-weight: 600; }
+  #file-input { display: none; }
+
+  /* ── ボタン ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 8px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: .15s; }
+  .btn-primary { background: #1a1a2e; color: #fff; }
+  .btn-primary:hover { background: #2a2a4e; }
+  .btn-gold { background: #c9a84c; color: #1a1a2e; }
+  .btn-gold:hover { background: #b8942f; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── フォームフィールド ── */
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
+  label .req { color: #e55; margin-left: 4px; }
+  input[type=text], input[type=date], textarea, select {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 14px; font-family: inherit; transition: border-color .2s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #c9a84c; }
+  textarea { min-height: 180px; resize: vertical; }
+
+  /* ── タグ入力 ── */
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag { background: #1a1a2e11; border-radius: 99px; padding: 3px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; }
+  .tag button { background: none; border: none; cursor: pointer; color: #888; font-size: 14px; line-height: 1; }
+  .tag-input-row { display: flex; gap: 8px; margin-top: 8px; }
+  .tag-input-row input { flex: 1; }
+
+  /* ── ステータス ── */
+  #status { padding: 14px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; display: none; margin-top: 16px; }
+  #status.loading { background: #e8f4ff; color: #1a6eb5; display: block; }
+  #status.success { background: #e8f8ee; color: #1a7a45; display: block; }
+  #status.error   { background: #fef0f0; color: #c0392b; display: block; }
+
+  /* ── スピナー ── */
+  .spinner { width: 16px; height: 16px; border: 2px solid #fff4; border-top-color: currentColor; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── ステップ非表示 ── */
+  #step2 { display: none; }
+  #step3 { display: none; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .row2 { grid-template-columns: 1fr; } }
+
+  /* 登録済みバナー */
+  #success-banner { display: none; background: #1a7a45; color: #fff; border-radius: 10px; padding: 20px 24px; text-align: center; margin-bottom: 20px; }
+  #success-banner h2 { font-size: 18px; margin-bottom: 6px; }
+  #success-banner p { font-size: 13px; opacity: .85; }
+  #success-banner a { color: #c9a84c; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SCJ セミナー登録ツール</h1>
+  <span>管理者専用</span>
+</header>
+
+<main>
+
+  <!-- 成功バナー -->
+  <div id="success-banner">
+    <h2>✅ Contentfulに登録しました！</h2>
+    <p>サイトへの反映は数分後です。<a href="https://scj-4cb.pages.dev/seminars/" target="_blank">セミナーページを確認 →</a></p>
+  </div>
+
+  <!-- STEP 1: PDFアップロード -->
+  <div class="card" id="step1">
+    <div class="card-title">Step 1 — PDF をアップロード</div>
+
+    <div id="drop-zone">
+      <div class="icon">📄</div>
+      <p>PDFをここにドロップ<br>またはクリックして選択</p>
+      <div id="file-name"></div>
+    </div>
+    <input type="file" id="file-input" accept=".pdf">
+
+    <br>
+    <button class="btn btn-primary" id="analyze-btn" disabled>
+      <span class="spinner" id="analyze-spinner" style="display:none"></span>
+      解析する →
+    </button>
+    <div id="status"></div>
+  </div>
+
+  <!-- STEP 2: 内容確認・修正 -->
+  <div class="card" id="step2">
+    <div class="card-title">Step 2 — 内容を確認・修正</div>
+
+    <div class="form-group">
+      <label>タイトル <span class="req">*</span></label>
+      <input type="text" id="f-title" placeholder="例：令和7年度第2回スポーツコミッションセミナー">
+    </div>
+
+    <div class="row2">
+      <div class="form-group">
+        <label>開催日 <span class="req">*</span></label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="form-group">
+        <label>区分</label>
+        <select id="f-category">
+          <option value="レポート">レポート（過去アーカイブ）</option>
+          <option value="イベント">イベント（開催予定・今後）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>開催場所</label>
+      <input type="text" id="f-venue" placeholder="例：参議院議員会館 B109 会議室">
+    </div>
+
+    <div class="form-group">
+      <label>本文（PDFの内容をそのまま）</label>
+      <textarea id="f-body"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>検索タグ（講演者名・キーワード）</label>
+      <div class="tags-wrap" id="tags-wrap"></div>
+      <div class="tag-input-row">
+        <input type="text" id="tag-input" placeholder="タグを追加して Enter">
+        <button class="btn btn-primary" onclick="addTagFromInput()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 登録 -->
+  <div class="card" id="step3">
+    <div class="card-title">Step 3 — Contentfulに登録</div>
+    <p style="font-size:13px;color:#666;margin-bottom:16px">内容を確認して「登録する」を押すと、自動的にサイトに公開されます。</p>
+    <button class="btn btn-gold" id="submit-btn">
+      <span class="spinner" id="submit-spinner" style="display:none"></span>
+      Contentfulに登録する
+    </button>
+    <div id="submit-status"></div>
+  </div>
+
+</main>
+
+<script>
+let selectedFile = null;
+let tags = [];
+let rawBodyText = '';
+
+// ── ドロップゾーン ────────────────────────────────────────────────────────────
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') setFile(file);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+function setFile(file) {
+  selectedFile = file;
+  document.getElementById('file-name').textContent = `📎 ${file.name}`;
+  document.getElementById('analyze-btn').disabled = false;
+}
+
+// ── 解析 ──────────────────────────────────────────────────────────────────────
+document.getElementById('analyze-btn').addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  setStatus('loading', '⏳ PDFを解析中...');
+  document.getElementById('analyze-spinner').style.display = 'inline-block';
+  document.getElementById('analyze-btn').disabled = true;
+
+  const formData = new FormData();
+  formData.append('pdf', selectedFile);
+
+  try {
+    const res = await fetch('/analyze', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    const p = data.parsed;
+    rawBodyText = data.rawText || '';
+
+    // フォームに反映
+    document.getElementById('f-title').value = p.title || '';
+    document.getElementById('f-date').value = p.date || '';
+    document.getElementById('f-venue').value = p.venue || '';
+    document.getElementById('f-body').value = rawBodyText;
+
+    // タグ
+    tags = p.tags || [];
+    renderTags();
+
+    // STEPを表示
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('step3').style.display = 'block';
+    document.getElementById('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    setStatus('success', '✅ 解析完了！内容を確認して「登録する」を押してください。');
+  } catch (e) {
+    setStatus('error', `❌ エラー: ${e.message}`);
+    document.getElementById('analyze-btn').disabled = false;
+  }
+  document.getElementById('analyze-spinner').style.display = 'none';
+});
+
+// ── タグ ─────────────────────────────────────────────────────────────────────
+function renderTags() {
+  const wrap = document.getElementById('tags-wrap');
+  wrap.innerHTML = '';
+  tags.forEach((tag, i) => {
+    const el = document.createElement('span');
+    el.className = 'tag';
+    el.innerHTML = `${tag}<button onclick="removeTag(${i})">×</button>`;
+    wrap.appendChild(el);
+  });
+}
+function removeTag(i) { tags.splice(i, 1); renderTags(); }
+function addTagFromInput() {
+  const input = document.getElementById('tag-input');
+  const val = input.value.trim();
+  if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
+  input.value = '';
+}
+document.getElementById('tag-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addTagFromInput(); }
+});
+
+// ── 登録 ─────────────────────────────────────────────────────────────────────
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const title = document.getElementById('f-title').value.trim();
+  const date  = document.getElementById('f-date').value;
+  if (!title) { alert('タイトルを入力してください'); return; }
+  if (!date)  { alert('開催日を入力してください'); return; }
+
+  document.getElementById('submit-spinner').style.display = 'inline-block';
+  document.getElementById('submit-btn').disabled = true;
+
+  const payload = {
+    title,
+    date,
+    venue: document.getElementById('f-venue').value.trim(),
+    bodyText: document.getElementById('f-body').value,
+    category: document.getElementById('f-category').value,
+    tags,
+  };
+
+  try {
+    const res = await fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    // 成功
+    document.getElementById('success-banner').style.display = 'block';
+    document.getElementById('success-banner').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step1').style.display = 'none';
+
+  } catch (e) {
+    const ss = document.getElementById('submit-status');
+    ss.className = 'error';
+    ss.style.display = 'block';
+    ss.textContent = `❌ ${e.message}`;
+    document.getElementById('submit-btn').disabled = false;
+  }
+  document.getElementById('submit-spinner').style.display = 'none';
+});
+
+function setStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = type;
+  el.textContent = msg;
+}
+</script>
+</body>
+</html>

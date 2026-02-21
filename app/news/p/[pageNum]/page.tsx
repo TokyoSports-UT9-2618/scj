@@ -15,10 +15,14 @@ const notSerifJP = Noto_Serif_JP({
 // 静的生成: 全ページ番号を事前に生成
 export async function generateStaticParams() {
   const totalPages = await getTotalNewsPages();
+  if (totalPages <= 1) return [];
   return Array.from({ length: totalPages - 1 }, (_, i) => ({
     pageNum: String(i + 2), // ページ2から始まる
   }));
 }
+
+// 静的エクスポート時に generateStaticParams が空でもビルドエラーにしない
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: { params: Promise<{ pageNum: string }> }) {
   const { pageNum } = await params;
