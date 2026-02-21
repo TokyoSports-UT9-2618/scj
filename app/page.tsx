@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { getRecentNews, getNewsByCategory } from '@/lib/news-service';
 import Hero from '@/components/Hero';
 import Section from '@/components/ui/Section';
@@ -26,36 +27,56 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       <Hero />
 
-      {/* Message Section */}
-      <Section id="mission" className="relative overflow-hidden">
+      {/* 理事長挨拶 Section */}
+      <Section id="greeting" className="relative overflow-hidden">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="order-2 md:order-1 relative h-[400px] rounded-lg overflow-hidden shadow-xl">
-            <DuotoneImage
-              src="https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&h=800&fit=crop"
-              alt="Community Sports"
-              fill
-            />
+
+          {/* 左：写真 + 肩書き */}
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative w-64 h-80 md:w-72 md:h-96 rounded-2xl overflow-hidden shadow-xl border-4 border-white ring-1 ring-gray-200">
+              <Image
+                src="/director.png"
+                alt="理事長 木田 悟"
+                fill
+                className="object-cover object-top"
+                sizes="(max-width: 768px) 256px, 288px"
+              />
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-500 tracking-widest mb-1">一般財団法人 日本スポーツコミッション</p>
+              <p className="text-sm font-bold text-gray-500 mb-1">理事長</p>
+              <p className={`text-2xl font-bold text-navy-900 ${notSerifJP.className}`}>木田 悟</p>
+            </div>
           </div>
-          <div className="order-1 md:order-2">
-            <h2 className={`text-3xl md:text-4xl font-bold text-navy-900 mb-6 ${notSerifJP.className}`}>
-              スポーツには、<br />地域を変える力がある。
+
+          {/* 右：挨拶文 */}
+          <div>
+            <p className="text-xs font-bold tracking-[0.3em] text-accent-gold uppercase mb-3">Greeting</p>
+            <h2 className={`text-2xl md:text-3xl font-bold text-navy-900 mb-6 leading-snug ${notSerifJP.className}`}>
+              スポーツのチカラで、<br />まちを、地域を、動かす。
             </h2>
-            <p className="text-gray-600 leading-relaxed mb-6 text-justify">
-              近年、スポーツは単なる身体活動や競技の枠を超え、地域活性化、観光振興、
-              健康増進、コミュニティ形成など、多面的な社会的価値を持つものとして注目されています。
-            </p>
-            <p className="text-gray-600 leading-relaxed mb-8 text-justify">
-              日本スポーツコミッションは、産官学民の連携により、
-              スポーツのチカラを最大限に活用した「持続可能なまちづくり」を推進します。
-            </p>
-            <Link
-              href="/about"
-              className="text-navy-900 font-bold border-b-2 border-accent-gold hover:text-navy-800 transition-colors inline-flex items-center gap-2 group"
-            >
-              私たちのミッション
-              <span className="transform transition-transform group-hover:translate-x-1">→</span>
-            </Link>
+            <div className="space-y-4 text-gray-600 leading-relaxed text-justify">
+              <p>
+                当法人は、スポーツを活用したまちづくり・地域活性化を推進する組織として、平成21年（2009年）に設立いたしました。
+              </p>
+              <p>
+                スポーツは、競技や身体活動の枠を超え、地域経済の活性化、観光振興、コミュニティ形成、そして人々の誇りや一体感の醸成など、多面的な社会的価値を持っています。Jリーグ開幕以来、スポーツと地域の結びつきは深まり、今やスポーツは地方創生の重要な柱のひとつとなっています。
+              </p>
+              <p>
+                私たちは、こうしたスポーツの可能性を最大限に引き出し、持続可能なまちづくりに貢献するため、調査研究・提言・講演・出版など多角的な活動を続けています。
+              </p>
+            </div>
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <Link
+                href="/about"
+                className="text-navy-900 font-bold border-b-2 border-accent-gold hover:text-navy-800 transition-colors inline-flex items-center gap-2 group"
+              >
+                法人概要・ミッションを見る
+                <span className="transform transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
           </div>
+
         </div>
       </Section>
 
