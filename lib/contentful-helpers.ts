@@ -22,6 +22,8 @@ export function transformNewsEntry(entry: NewsEntry): News {
     metaDescription: fields.metaDescription,
     createdAt: entry.sys.createdAt,
     updatedAt: entry.sys.updatedAt,
+    projectCategory: fields.projectCategory,
+    projectTags: fields.projectTags,
   };
 }
 

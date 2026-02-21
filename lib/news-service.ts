@@ -119,6 +119,31 @@ export async function getNewsByCategory(category: string, limit: number = 10): P
   return getAllNews(limit, category);
 }
 
+// 実績カテゴリIDで記事を取得（projects/[id] ページ用）
+export async function getNewsByProjectCategory(
+  projectCategory: string,
+  limit: number = 50,
+): Promise<News[]> {
+  if (USE_MOCK_DATA) {
+    // モック時はprojectCategoryが未設定のため空を返す
+    return [];
+  }
+
+  try {
+    const response = await contentfulClient!.getEntries<NewsSkeleton>({
+      content_type: 'news',
+      'fields.projectCategory': projectCategory,
+      order: ['-fields.publishedAt'],
+      limit,
+    } as any);
+
+    return response.items.map((item) => transformNewsEntry(item as NewsEntry));
+  } catch (error) {
+    console.error('Error fetching news by projectCategory:', error);
+    return [];
+  }
+}
+
 // 月別アーカイブ型
 export interface MonthlyArchive {
   year: number;

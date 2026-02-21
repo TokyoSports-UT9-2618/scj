@@ -7,6 +7,16 @@ export interface ContentfulSys {
   updatedAt: string;
 }
 
+// 実績カテゴリID（projects-data.ts の id と対応）
+export type ProjectCategoryId =
+  | 'research'
+  | 'advocacy'
+  | 'pr-lectures'
+  | 'seminars'
+  | 'publishing'
+  | 'membership'
+  | 'related';
+
 // ニュース記事のフィールド型
 export interface NewsFields {
   title: string;
@@ -16,6 +26,8 @@ export interface NewsFields {
   category?: 'お知らせ' | 'イベント' | 'レポート' | 'その他';
   body: any; // Contentful Rich Text
   metaDescription?: string;
+  projectCategory?: ProjectCategoryId; // 実績カテゴリ紐付け
+  projectTags?: string[];              // 実績タグ（複数）
 }
 
 // Contentful Entry Skeleton型 (SDK v10対応)
@@ -42,4 +54,6 @@ export interface News {
   metaDescription?: string;
   createdAt: string;
   updatedAt: string;
+  projectCategory?: ProjectCategoryId; // 実績カテゴリ紐付け
+  projectTags?: string[];              // 実績タグ（複数）
 }

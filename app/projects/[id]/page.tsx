@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { Noto_Serif_JP } from 'next/font/google';
 import { PROJECT_GROUPS, AchievementItem } from '@/lib/projects-data';
 import { BOOKS_DATA, BOOK_TYPE_LABEL } from '@/lib/books-data';
+import { getNewsByProjectCategory } from '@/lib/news-service';
+import ProjectNewsAccordion from '@/components/ui/ProjectNewsAccordion';
 
 const notoSerifJP = Noto_Serif_JP({
   weight: ['400', '700'],
@@ -62,6 +64,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
   const isPublishing = id === 'publishing';
   const eraGroups = groupByEra(group.achievements);
+
+  // Contentfulから実績カテゴリ紐付き記事を取得
+  const projectNews = await getNewsByProjectCategory(id);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -242,6 +247,21 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* ── 最新の実績・活動記録（Contentful連携） ── */}
+              {projectNews.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <h2 className={`text-xl font-bold text-navy-900 ${notoSerifJP.className}`}>
+                      最新の活動記録
+                    </h2>
+                    <span className="text-sm text-gray-400">
+                      （{projectNews.length}件・クリックで詳細表示）
+                    </span>
+                  </div>
+                  <ProjectNewsAccordion news={projectNews} accentColor={group.color} />
                 </div>
               )}
 
