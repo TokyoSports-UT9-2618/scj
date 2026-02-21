@@ -32,7 +32,9 @@ export default async function SeminarsPage() {
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
   // 直近の開催予定1件をメインで大きく表示
-  const featured = upcoming[0] ?? null;
+  // 開催予定がない場合は最新のアーカイブ1件を表示
+  const featured = upcoming[0] ?? past[0] ?? null;
+  const featuredIsPast = upcoming.length === 0 && past.length > 0;
   const otherUpcoming = upcoming.slice(1);
 
   return (
@@ -81,9 +83,9 @@ export default async function SeminarsPage() {
           {featured ? (
             <div className="space-y-8">
               {/* フィーチャードカード（bodyフル表示） */}
-              <FeaturedSeminarCard seminar={featured} />
+              <FeaturedSeminarCard seminar={featured} isPastFallback={featuredIsPast} />
 
-              {/* 2件目以降 */}
+              {/* 2件目以降の開催予定 */}
               {otherUpcoming.length > 0 && (
                 <div className="space-y-4">
                   {otherUpcoming.map((s) => (
@@ -156,7 +158,7 @@ export default async function SeminarsPage() {
 }
 
 // ─── フィーチャードカード（bodyフル表示） ────────────────────────────────────
-function FeaturedSeminarCard({ seminar }: { seminar: News }) {
+function FeaturedSeminarCard({ seminar, isPastFallback }: { seminar: News; isPastFallback?: boolean }) {
   const date = new Date(seminar.publishedAt);
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -176,7 +178,7 @@ function FeaturedSeminarCard({ seminar }: { seminar: News }) {
           </div>
           <div>
             <span className="inline-block bg-accent-gold/20 text-accent-gold text-xs font-bold px-3 py-1 rounded-full mb-2">
-              開催予定
+              {isPastFallback ? '直近の開催' : '開催予定'}
             </span>
             <h3 className={`text-lg md:text-xl font-bold text-white leading-snug`}>
               {seminar.title}
@@ -226,11 +228,13 @@ function FeaturedSeminarCard({ seminar }: { seminar: News }) {
             className="inline-flex items-center gap-2 bg-navy-900 text-white font-bold
                        px-6 py-3 rounded-lg hover:bg-navy-800 transition-colors shadow-sm"
           >
-            詳細ページを見る・申込はこちら →
+            {isPastFallback ? '開催報告を見る →' : '詳細ページを見る・申込はこちら →'}
           </Link>
-          <span className="text-xs text-gray-400">
-            ※申込方法・詳細は詳細ページをご確認ください
-          </span>
+          {!isPastFallback && (
+            <span className="text-xs text-gray-400">
+              ※申込方法・詳細は詳細ページをご確認ください
+            </span>
+          )}
         </div>
       </div>
     </article>

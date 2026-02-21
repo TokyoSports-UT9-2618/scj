@@ -31,6 +31,7 @@ const PORT = 4000;
 const SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
 const MANAGEMENT_TOKEN = process.env.CONTENTFUL_MANAGEMENT_TOKEN;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const CLOUDFLARE_DEPLOY_HOOK = process.env.CLOUDFLARE_DEPLOY_HOOK;
 
 // ─── PDF テキスト抽出 ────────────────────────────────────────────────────────
 async function extractPdfText(buffer) {
@@ -216,6 +217,20 @@ async function postToContentful(fields) {
   return entryId;
 }
 
+// ─── Cloudflare Pages 再ビルドトリガー ──────────────────────────────────────
+async function triggerCloudflareDeploy() {
+  if (!CLOUDFLARE_DEPLOY_HOOK) {
+    console.log('⚠️  CLOUDFLARE_DEPLOY_HOOK 未設定 - 再ビルドスキップ');
+    return;
+  }
+  const res = await fetch(CLOUDFLARE_DEPLOY_HOOK, { method: 'POST' });
+  if (res.ok) {
+    console.log('🚀 Cloudflare Pages 再ビルドをトリガーしました');
+  } else {
+    console.warn('⚠️  Cloudflare Deploy Hook 呼び出し失敗:', res.status);
+  }
+}
+
 // ─── multipart/form-data パーサー ────────────────────────────────────────────
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
@@ -300,11 +315,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ── POST /submit → Contentfulに登録
+  // ── POST /submit → Contentfulに登録 → Cloudflare再ビルド
   if (req.method === 'POST' && url.pathname === '/submit') {
     try {
       const data = await parseJson(req);
       const entryId = await postToContentful(data);
+      // 登録成功後にCloudflare Pagesの再ビルドをトリガー
+      triggerCloudflareDeploy().catch(e => console.warn('Deploy hook error:', e.message));
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify({ ok: true, entryId }));
     } catch (e) {
