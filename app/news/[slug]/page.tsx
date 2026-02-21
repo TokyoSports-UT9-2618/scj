@@ -104,11 +104,14 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
             <div
               className="prose prose-lg prose-slate max-w-none
                     prose-headings:text-navy-900 prose-headings:font-bold
-                    prose-p:text-gray-700 prose-p:leading-relaxed
+                    prose-h3:text-xl prose-h3:mt-10 prose-h3:mb-4
+                    prose-h3:pb-2 prose-h3:border-b-2 prose-h3:border-accent-gold
+                    prose-p:text-gray-700 prose-p:leading-[2] prose-p:my-4
                     prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
                     prose-strong:text-navy-900
                     prose-img:rounded-lg prose-img:shadow-md
-                    prose-blockquote:border-accent-gold prose-blockquote:bg-gray-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:not-italic"
+                    prose-blockquote:border-accent-gold prose-blockquote:bg-amber-50
+                    prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:not-italic"
               dangerouslySetInnerHTML={{ __html: news.bodyHtml }}
             />
           </div>

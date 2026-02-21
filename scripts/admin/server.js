@@ -138,6 +138,72 @@ function simpleParse(text) {
   return { title, date, venue, summary: '', speakers, tags };
 }
 
+// ─── bodyText → Contentful Rich Text ノード変換 ─────────────────────────────
+function buildRichTextDocument(bodyText) {
+  const nodes = [];
+
+  // 空行で大段落に分割してから処理
+  const rawBlocks = bodyText.split(/\n{2,}/);
+
+  for (const block of rawBlocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+
+    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // 「〇」始まりの行 → heading-3 として扱う
+    const firstLine = lines[0];
+    if (/^[〇○●◉◆◇▶▷►]/.test(firstLine)) {
+      // 見出し行
+      nodes.push({
+        nodeType: 'heading-3',
+        data: {},
+        content: [{ nodeType: 'text', value: firstLine.replace(/^[〇○●◉◆◇▶▷►]\s*/, ''), marks: [], data: {} }]
+      });
+      // 残りの行をまとめて段落に
+      if (lines.length > 1) {
+        const rest = lines.slice(1).join('\n');
+        // スピーカー行（①②③ や 「氏名：所属」）を検出して個別段落に
+        const speakerLines = rest.split('\n');
+        let buf = [];
+        for (const sl of speakerLines) {
+          if (/^[①②③④⑤⑥⑦⑧⑨]/.test(sl) && buf.length > 0) {
+            nodes.push(makeParagraph(buf.join('\n')));
+            buf = [];
+          }
+          buf.push(sl);
+        }
+        if (buf.length > 0) nodes.push(makeParagraph(buf.join('\n')));
+      }
+    } else if (lines.length === 1) {
+      // 1行のみ → 段落
+      nodes.push(makeParagraph(trimmed));
+    } else {
+      // 複数行 → 各行を改行区切りで1つの段落にまとめる
+      nodes.push(makeParagraph(lines.join('\n')));
+    }
+  }
+
+  if (nodes.length === 0) {
+    nodes.push(makeParagraph('（本文なし）'));
+  }
+
+  return { nodeType: 'document', data: {}, content: nodes };
+}
+
+// 段落ノード生成（\n → 改行ノード）
+function makeParagraph(text) {
+  const parts = text.split('\n');
+  const content = [];
+  parts.forEach((part, i) => {
+    content.push({ nodeType: 'text', value: part, marks: [], data: {} });
+    if (i < parts.length - 1) {
+      content.push({ nodeType: 'text', value: '\n', marks: [], data: {} });
+    }
+  });
+  return { nodeType: 'paragraph', data: {}, content };
+}
+
 // ─── Contentful に登録 ───────────────────────────────────────────────────────
 async function postToContentful(fields) {
   const { title, date, venue, bodyText, tags, category } = fields;
@@ -160,17 +226,7 @@ async function postToContentful(fields) {
       projectCategory: { 'en-US': 'seminars' },
       projectTags:     { 'en-US': tags },
       metaDescription: { 'en-US': venue || '' },
-      body: {
-        'en-US': {
-          nodeType: 'document',
-          data: {},
-          content: bodyText.split('\n\n').filter(Boolean).map(para => ({
-            nodeType: 'paragraph',
-            data: {},
-            content: [{ nodeType: 'text', value: para.replace(/\n/g, ' '), marks: [], data: {} }]
-          }))
-        }
-      }
+      body:            { 'en-US': buildRichTextDocument(bodyText) },
     }
   };
 

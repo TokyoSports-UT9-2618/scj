@@ -73,7 +73,7 @@ export default async function SeminarsPage() {
         <div className="container mx-auto px-4 md:px-6 max-w-5xl">
           <div className="flex items-end justify-between mb-8 border-b border-gray-200 pb-4">
             <h2 className={`text-2xl font-bold text-navy-900 ${notoSerifJP.className}`}>
-              開催予定
+              {featuredIsPast ? '直近の開催' : '開催予定'}
             </h2>
             {upcoming.length > 1 && (
               <span className="text-sm text-accent-gold font-bold">{upcoming.length}件</span>
