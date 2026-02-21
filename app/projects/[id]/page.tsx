@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Noto_Serif_JP } from 'next/font/google';
-import { PROJECT_GROUPS } from '@/lib/projects-data';
+import { PROJECT_GROUPS, AchievementItem } from '@/lib/projects-data';
 import { BOOKS_DATA, BOOK_TYPE_LABEL } from '@/lib/books-data';
 
 const notoSerifJP = Noto_Serif_JP({
@@ -27,6 +27,29 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
+// 時代ラベル（yearNum から元号グループを返す）
+function getEra(yearNum: number): string {
+  if (yearNum >= 2019) return '令和';
+  if (yearNum >= 1989) return '平成';
+  return '昭和';
+}
+
+// achievements を時代別にグループ化
+function groupByEra(achievements: AchievementItem[]) {
+  const sorted = [...achievements].sort((a, b) => b.yearNum - a.yearNum);
+  const groups: { era: string; items: AchievementItem[] }[] = [];
+  for (const item of sorted) {
+    const era = getEra(item.yearNum);
+    const last = groups[groups.length - 1];
+    if (last && last.era === era) {
+      last.items.push(item);
+    } else {
+      groups.push({ era, items: [item] });
+    }
+  }
+  return groups;
+}
+
 export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const group = PROJECT_GROUPS.find((g) => g.id === id);
@@ -37,8 +60,8 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   const prev = idx > 0 ? PROJECT_GROUPS[idx - 1] : null;
   const next = idx < PROJECT_GROUPS.length - 1 ? PROJECT_GROUPS[idx + 1] : null;
 
-  // 出版事業ページ判定
   const isPublishing = id === 'publishing';
+  const eraGroups = groupByEra(group.achievements);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -60,7 +83,6 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         />
 
         <div className="absolute inset-0 flex items-end container mx-auto px-4 md:px-6 pb-10">
-          {/* パンくず */}
           <div className="w-full">
             <nav className="flex items-center gap-2 text-sm text-gray-400 mb-4">
               <Link href="/" className="hover:text-white transition-colors">ホーム</Link>
@@ -71,7 +93,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             </nav>
             <div className="flex items-center gap-4">
               <span
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full text-white text-lg font-bold"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full text-white text-lg font-bold shrink-0"
                 style={{ backgroundColor: group.color }}
               >
                 {group.number}
@@ -89,9 +111,10 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid lg:grid-cols-3 gap-10">
 
-            {/* メインコンテンツ */}
+            {/* ── メインコンテンツ ── */}
             <div className="lg:col-span-2 space-y-8">
-              {/* 概要 */}
+
+              {/* 概要カード */}
               <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
                 <h2 className={`text-xl font-bold text-navy-900 mb-4 ${notoSerifJP.className}`}>
                   事業概要
@@ -99,6 +122,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <p className="text-gray-600 leading-relaxed text-lg">
                   {group.description}
                 </p>
+                {group.note && (
+                  <p className="mt-4 text-xs text-gray-400 border-t border-gray-100 pt-4">
+                    ※ {group.note}
+                  </p>
+                )}
               </div>
 
               {/* ── 出版事業のみ: 書籍・冊子ギャラリー ── */}
@@ -107,9 +135,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   {/* 書籍セクション */}
                   <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
                     <h2 className={`text-xl font-bold text-navy-900 mb-8 flex items-center gap-3 ${notoSerifJP.className}`}>
-                      <svg className="w-6 h-6 text-accent-gold" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
+                      <span
+                        className="inline-flex items-center justify-center w-7 h-7 rounded text-white text-sm"
+                        style={{ backgroundColor: group.color }}
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                      </span>
                       書籍
                     </h2>
                     <div className="grid gap-10">
@@ -122,10 +155,15 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   {/* 冊子・論文セクション */}
                   <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
                     <h2 className={`text-xl font-bold text-navy-900 mb-6 flex items-center gap-3 ${notoSerifJP.className}`}>
-                      <svg className="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                      </svg>
+                      <span
+                        className="inline-flex items-center justify-center w-7 h-7 rounded text-white"
+                        style={{ backgroundColor: group.color }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                      </span>
                       冊子・論文・寄稿
                     </h2>
                     <div className="space-y-4">
@@ -137,8 +175,78 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 </div>
               )}
 
-              {/* ── 出版事業以外: 主な実績リスト ── */}
-              {!isPublishing && (
+              {/* ── 会員事業: シンプルなカード形式 ── */}
+              {id === 'membership' && group.achievements.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
+                  <h2 className={`text-xl font-bold text-navy-900 mb-6 flex items-center gap-3 ${notoSerifJP.className}`}>
+                    <span
+                      className="inline-flex items-center justify-center w-7 h-7 rounded text-white"
+                      style={{ backgroundColor: group.color }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                    </span>
+                    活動組織・会員グループ
+                  </h2>
+                  <div className="space-y-4">
+                    {group.achievements.sort((a, b) => b.yearNum - a.yearNum).map((item, i) => (
+                      <MembershipCard key={i} item={item} accentColor={group.color} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 出版・会員以外: 実績タイムライン ── */}
+              {!isPublishing && id !== 'membership' && group.achievements.length > 0 && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <h2 className={`text-xl font-bold text-navy-900 ${notoSerifJP.className}`}>
+                      活動実績
+                    </h2>
+                    <span className="text-sm text-gray-400">
+                      （{group.achievements.length}件・新しい順）
+                    </span>
+                  </div>
+
+                  {eraGroups.map(({ era, items }) => (
+                    <div key={era}>
+                      {/* 時代見出し */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <span
+                          className="px-4 py-1.5 rounded-full text-sm font-bold text-white"
+                          style={{ backgroundColor: group.color }}
+                        >
+                          {era}
+                        </span>
+                        <div className="flex-1 h-px bg-gray-200" />
+                      </div>
+
+                      {/* 実績リスト */}
+                      <div className="relative pl-6 space-y-0">
+                        {/* 縦ライン */}
+                        <div
+                          className="absolute left-2 top-2 bottom-2 w-0.5"
+                          style={{ backgroundColor: `${group.color}33` }}
+                        />
+
+                        {items.map((item, i) => (
+                          <AchievementRow
+                            key={i}
+                            item={item}
+                            accentColor={group.color}
+                            isLast={i === items.length - 1}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 実績なしフォールバック（念のため） */}
+              {!isPublishing && id !== 'membership' && group.achievements.length === 0 && (
                 <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
                   <h2 className={`text-xl font-bold text-navy-900 mb-6 ${notoSerifJP.className}`}>
                     主な実績
@@ -158,30 +266,27 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   </ul>
                 </div>
               )}
-
-              {/* 詳細は元サイトへ */}
-              <div className="p-6 bg-navy-900/5 rounded-xl border border-navy-900/10">
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                  各年度の詳細な活動内容・実績については、元サイトの実績紹介ページをご覧ください。
-                </p>
-                <a
-                  href="https://sportscommission.or.jp/%e5%ae%9f%e7%b8%be%e4%b8%80%e8%a6%a7/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-navy-900 font-bold hover:text-blue-700 transition-colors text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  元サイトの実績一覧を見る
-                </a>
-              </div>
             </div>
 
-            {/* サイドバー */}
+            {/* ── サイドバー ── */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
+                {/* 統計カード */}
+                {group.achievements.length > 0 && (
+                  <div
+                    className="rounded-xl p-6 text-white"
+                    style={{ backgroundColor: group.color }}
+                  >
+                    <p className="text-sm opacity-80 mb-1">掲載実績数</p>
+                    <p className="text-4xl font-bold mb-1">{group.achievements.length}<span className="text-lg font-normal ml-1">件</span></p>
+                    {group.achievements.length > 0 && (
+                      <p className="text-xs opacity-70">
+                        {group.achievements[group.achievements.length - 1]?.year}〜{group.achievements[0]?.year}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* 全グループリスト */}
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                   <h3 className={`text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 ${notoSerifJP.className}`}>
@@ -268,6 +373,83 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             ) : <div />}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── タイムライン行コンポーネント ───────────────────────────────────────
+function AchievementRow({
+  item,
+  accentColor,
+  isLast,
+}: {
+  item: AchievementItem;
+  accentColor: string;
+  isLast: boolean;
+}) {
+  return (
+    <div className={`relative flex gap-4 ${isLast ? 'pb-2' : 'pb-5'}`}>
+      {/* ドット */}
+      <div
+        className="absolute -left-4 top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm shrink-0"
+        style={{ backgroundColor: accentColor }}
+      />
+
+      {/* カード */}
+      <div className="flex-1 bg-white rounded-xl border border-gray-100 px-5 py-4 shadow-sm
+                      hover:shadow-md hover:border-gray-200 transition-all">
+        {/* 年度バッジ */}
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <span
+            className="text-xs font-bold px-2.5 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: accentColor }}
+          >
+            {item.year}
+          </span>
+          {item.client && (
+            <span className="text-xs text-gray-400">
+              {item.client}
+            </span>
+          )}
+        </div>
+        {/* 本文 */}
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {item.content}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── 会員事業カード ──────────────────────────────────────────────────────
+function MembershipCard({ item, accentColor }: { item: AchievementItem; accentColor: string }) {
+  return (
+    <div className="flex gap-4 p-5 rounded-xl border border-gray-100 bg-gray-50
+                    hover:border-gray-200 hover:bg-white hover:shadow-sm transition-all">
+      {/* アイコンドット */}
+      <div
+        className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white mt-0.5"
+        style={{ backgroundColor: accentColor }}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <span
+            className="text-xs font-bold px-2 py-0.5 rounded text-white"
+            style={{ backgroundColor: accentColor }}
+          >
+            {item.year}
+          </span>
+          {item.client && (
+            <span className="text-xs text-gray-400">{item.client}</span>
+          )}
+        </div>
+        <p className="text-sm font-bold text-navy-900 leading-snug">{item.content}</p>
       </div>
     </div>
   );
