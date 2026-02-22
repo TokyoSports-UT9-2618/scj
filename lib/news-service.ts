@@ -119,6 +119,52 @@ export async function getNewsByCategory(category: string, limit: number = 10): P
   return getAllNews(limit, category);
 }
 
+// トップページPickUp用：直近の開催予定イベント、なければ最新レポート
+export async function getPickUpEntry(): Promise<News | null> {
+  const now = new Date().toISOString();
+
+  if (USE_MOCK_DATA) {
+    const upcoming = MOCK_NEWS_DATA
+      .filter((n) => n.category === 'イベント' && n.publishedAt >= now)
+      .sort((a, b) => a.publishedAt.localeCompare(b.publishedAt));
+    if (upcoming[0]) return upcoming[0];
+    const report = MOCK_NEWS_DATA
+      .filter((n) => n.category === 'レポート')
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    return report[0] ?? null;
+  }
+
+  try {
+    // 今日以降のイベントを開催日昇順で1件
+    const upcomingRes = await contentfulClient!.getEntries<NewsSkeleton>({
+      content_type: 'news',
+      'fields.category': 'イベント',
+      'fields.publishedAt[gte]': now,
+      order: ['fields.publishedAt'],
+      limit: 1,
+    } as any);
+    if (upcomingRes.items.length > 0) {
+      return transformNewsEntry(upcomingRes.items[0] as NewsEntry);
+    }
+
+    // 開催予定なし → 最新レポートを1件
+    const reportRes = await contentfulClient!.getEntries<NewsSkeleton>({
+      content_type: 'news',
+      'fields.category': 'レポート',
+      order: ['-fields.publishedAt'],
+      limit: 1,
+    } as any);
+    if (reportRes.items.length > 0) {
+      return transformNewsEntry(reportRes.items[0] as NewsEntry);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching pick up entry:', error);
+    return null;
+  }
+}
+
 // 実績カテゴリIDで記事を取得（projects/[id] ページ用）
 export async function getNewsByProjectCategory(
   projectCategory: string,

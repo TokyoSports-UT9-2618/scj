@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getRecentNews, getNewsByCategory } from '@/lib/news-service';
+import { getRecentNews, getPickUpEntry } from '@/lib/news-service';
 import Hero from '@/components/Hero';
 import Section from '@/components/ui/Section';
 import DuotoneImage from '@/components/ui/DuotoneImage';
@@ -16,12 +16,10 @@ const notSerifJP = Noto_Serif_JP({
 // Server Component for fetching data
 export default async function Home() {
   // Fetch data in parallel
-  const [latestNews, seminarNews] = await Promise.all([
+  const [latestNews, featuredSeminar] = await Promise.all([
     getRecentNews(4),
-    getNewsByCategory('イベント', 1)
+    getPickUpEntry(),
   ]);
-
-  const featuredSeminar = seminarNews[0] || null;
 
   // PickUpと重複する記事をNewsから除外して最大3件表示
   const displayedNews = (featuredSeminar
@@ -161,7 +159,7 @@ export default async function Home() {
                         </div>
                       )}
                       <div className="absolute top-0 right-0 bg-accent-gold text-navy-900 text-xs font-bold px-3 py-1">
-                        注目イベント
+                        {featuredSeminar.category === 'イベント' ? '開催予定' : '最新レポート'}
                       </div>
                     </div>
                     <div className="p-6">
