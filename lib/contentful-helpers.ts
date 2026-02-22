@@ -30,7 +30,9 @@ export function transformNewsEntry(entry: NewsEntry): News {
       height: ((fields.coverImage.fields.file.details as any)?.image?.height as number) || 0,
     } : undefined,
     category: fields.category,
-    bodyHtml: documentToHtmlString(fields.body),
+    bodyHtml: documentToHtmlString(fields.body, {
+      renderText: (text) => text.replace(/\n/g, '<br />'),
+    }),
     metaDescription: fields.metaDescription,
     createdAt: entry.sys.createdAt,
     updatedAt: entry.sys.updatedAt,
