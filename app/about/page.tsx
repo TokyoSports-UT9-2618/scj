@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export const metadata = {
   title: '私たちについて | 一般財団法人日本スポーツコミッション',
   description: '日本スポーツコミッションの概要、活動内容についてご紹介します。',
@@ -46,6 +48,26 @@ export default function AboutPage() {
               </div>
             </li>
           </ul>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">「スポーツコミッション」の商標について</h2>
+          <div className="space-y-4 text-gray-700 leading-relaxed">
+            <p>
+              一般財団法人日本スポーツコミッション（SCJ）は、スポーツを活用したまちづくり・地域づくりを推進することを目的に、「スポーツコミッション」を商標登録していました。
+            </p>
+            <p>
+              しかし、スポーツ庁による4要件の設定、および令和4年度からの第3期スポーツ基本計画で「スポーツまちづくり」が広く謳われるようになったことから、商標としての延長申請をしないことを決定しました。
+            </p>
+            <p>
+              今後、「スポーツコミッション」と名乗る場合、SCJの使用許可は不必要となります。ただし、スポーツ庁の4要件に基づいて活動することが求められています。
+            </p>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Link href="/trademarks" className="text-sm text-blue-600 hover:underline">
+              商標について（詳細ページ）→
+            </Link>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-8">
