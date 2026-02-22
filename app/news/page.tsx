@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getNewsPaginated, getAllMonthlyArchives } from '@/lib/news-service';
 import Section from '@/components/ui/Section';
 import DuotoneImage from '@/components/ui/DuotoneImage';
@@ -56,8 +57,14 @@ export default async function NewsPage() {
                               fill
                             />
                           ) : (
-                            <div className="w-full h-full bg-navy-900/10 flex items-center justify-center text-navy-900/30 font-bold">
-                              No Image
+                            <div className="w-full h-full bg-navy-900 flex items-center justify-center p-8">
+                              <Image
+                                src="/logo.png"
+                                alt="日本スポーツコミッション"
+                                width={160}
+                                height={64}
+                                className="object-contain opacity-70"
+                              />
                             </div>
                           )}
                           {news.category && (
