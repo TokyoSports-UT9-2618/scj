@@ -20,7 +20,7 @@ export default function Hero() {
             <div className="container mx-auto px-4 md:px-6 h-full flex items-center relative z-10">
                 <div className="max-w-3xl text-white">
                     <span className="inline-block py-1 px-3 border border-accent-gold text-accent-gold text-sm font-medium tracking-wider mb-6 rounded">
-                        JAPAN SPORTS COMMISSION
+                        Sports Commission of Japan
                     </span>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-8">
                         スポーツの力で、<br />
