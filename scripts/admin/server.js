@@ -139,61 +139,116 @@ function simpleParse(text) {
 }
 
 // ─── bodyText → Contentful Rich Text ノード変換 ─────────────────────────────
+// PDF抽出テキストの実際の構造に合わせた変換:
+//   ○ 見出し行     → heading-3
+//   基調講演/講演:  → スピーカーブロック（名前＋演題を改行つきまとめ）
+//   ①②③④ スピーカー行 → 各スピーカーを1段落に（名前・所属・演題まとめ）
+//   コーディネーター/パネリスト → まとめて1段落
+//   その他テキスト → 空行区切りで段落
 function buildRichTextDocument(bodyText) {
   const nodes = [];
 
-  // 空行で大段落に分割してから処理
-  const rawBlocks = bodyText.split(/\n{2,}/);
+  // 全行をトリムして取得（空行は保持してブロック境界に使う）
+  const rawLines = bodyText.split('\n').map(l => l.trim());
 
-  for (const block of rawBlocks) {
-    const trimmed = block.trim();
-    if (!trimmed) continue;
+  // ○ で始まる行のインデックスを全部拾い、セクション分割
+  // 各行を種別分類しながら順次処理
+  let i = 0;
+  while (i < rawLines.length) {
+    const line = rawLines[i];
 
-    const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+    // 空行スキップ
+    if (!line) { i++; continue; }
 
-    // 「〇」始まりの行 → heading-3 として扱う
-    const firstLine = lines[0];
-    if (/^[〇○●◉◆◇▶▷►]/.test(firstLine)) {
-      // 見出し行
-      nodes.push({
-        nodeType: 'heading-3',
-        data: {},
-        content: [{ nodeType: 'text', value: firstLine.replace(/^[〇○●◉◆◇▶▷►]\s*/, ''), marks: [], data: {} }]
-      });
-      // 残りの行をまとめて段落に
-      if (lines.length > 1) {
-        const rest = lines.slice(1).join('\n');
-        // スピーカー行（①②③ や 「氏名：所属」）を検出して個別段落に
-        const speakerLines = rest.split('\n');
+    // ── ○ 見出し行 ──────────────────────────────────────────────
+    if (/^[○〇]/.test(line)) {
+      const heading = line.replace(/^[○〇]\s*/, '').replace(/：\s*$/, '');
+
+      // 「内容」セクションは特別処理（続く行をスピーカーブロックとして解析）
+      if (/^内容/.test(heading)) {
+        nodes.push(makeHeading(heading));
+        i++;
+        // 内容セクションの行を読み込んでスピーカーブロックを構築
         let buf = [];
-        for (const sl of speakerLines) {
-          if (/^[①②③④⑤⑥⑦⑧⑨]/.test(sl) && buf.length > 0) {
-            nodes.push(makeParagraph(buf.join('\n')));
-            buf = [];
+        while (i < rawLines.length) {
+          const l = rawLines[i];
+          // 次の ○ 見出しに来たら終了
+          if (/^[○〇]/.test(l)) break;
+          // ①②③④ スピーカー行 → バッファ区切り
+          if (/^[①②③④⑤⑥⑦⑧⑨]/.test(l)) {
+            if (buf.length > 0) { nodes.push(makeParagraph(buf.join('\n'))); buf = []; }
           }
-          buf.push(sl);
+          // 基調講演行
+          if (/^基調講演/.test(l)) {
+            if (buf.length > 0) { nodes.push(makeParagraph(buf.join('\n'))); buf = []; }
+            nodes.push(makeHeading('基調講演'));
+            i++;
+            continue;
+          }
+          // 講演行（「講演：」）
+          if (/^講演[：:]/.test(l)) {
+            if (buf.length > 0) { nodes.push(makeParagraph(buf.join('\n'))); buf = []; }
+            nodes.push(makeHeading('講演'));
+            i++;
+            continue;
+          }
+          // ディスカッション行
+          if (/^ディスカッション/.test(l)) {
+            if (buf.length > 0) { nodes.push(makeParagraph(buf.join('\n'))); buf = []; }
+            nodes.push(makeHeading('ディスカッション'));
+            i++;
+            continue;
+          }
+          // コーディネーター/パネリスト → バッファに追加
+          if (l) buf.push(l.replace(/^[①②③④⑤⑥⑦⑧⑨]\s*/, ''));
+          i++;
         }
         if (buf.length > 0) nodes.push(makeParagraph(buf.join('\n')));
+        continue;
       }
-    } else if (lines.length === 1) {
-      // 1行のみ → 段落
-      nodes.push(makeParagraph(trimmed));
-    } else {
-      // 複数行 → 各行を改行区切りで1つの段落にまとめる
-      nodes.push(makeParagraph(lines.join('\n')));
+
+      // 通常の ○ 見出し（内容以外）
+      // 同じ行に値が続く場合（「○ 主催：〜」）は見出し＋値を段落に
+      const colonIdx = heading.indexOf('：');
+      if (colonIdx !== -1) {
+        // 「主催：XXX」のような行 → 見出しなしで1段落
+        nodes.push(makeParagraph(heading));
+      } else {
+        nodes.push(makeHeading(heading));
+      }
+      i++;
+      continue;
     }
+
+    // ── 空行区切りの本文段落 ─────────────────────────────────────
+    let buf = [];
+    while (i < rawLines.length) {
+      const l = rawLines[i];
+      if (!l) { i++; break; } // 空行で段落区切り
+      if (/^[○〇]/.test(l)) break; // 次の見出しで終了
+      buf.push(l);
+      i++;
+    }
+    if (buf.length > 0) nodes.push(makeParagraph(buf.join('\n')));
   }
 
-  if (nodes.length === 0) {
-    nodes.push(makeParagraph('（本文なし）'));
-  }
-
+  if (nodes.length === 0) nodes.push(makeParagraph('（本文なし）'));
   return { nodeType: 'document', data: {}, content: nodes };
+}
+
+// h3 見出しノード
+function makeHeading(text) {
+  return {
+    nodeType: 'heading-3',
+    data: {},
+    content: [{ nodeType: 'text', value: text, marks: [], data: {} }]
+  };
 }
 
 // 段落ノード生成（\n → 改行ノード）
 function makeParagraph(text) {
-  const parts = text.split('\n');
+  const parts = text.split('\n').filter(Boolean);
+  if (parts.length === 0) return { nodeType: 'paragraph', data: {}, content: [{ nodeType: 'text', value: '', marks: [], data: {} }] };
   const content = [];
   parts.forEach((part, i) => {
     content.push({ nodeType: 'text', value: part, marks: [], data: {} });
