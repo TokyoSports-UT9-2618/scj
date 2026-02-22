@@ -17,10 +17,12 @@ export async function getAllNews(limit: number = 100, category?: string): Promis
   }
 
   try {
+    const now = new Date().toISOString();
     const query: any = {
       content_type: 'news',
       limit,
       order: ['-fields.publishedAt'],
+      'fields.publishedAt[lte]': now, // 未来日付の記事を除外
     };
 
     if (category) {
@@ -50,11 +52,13 @@ export async function getNewsPaginated(page: number = 1, perPage: number = NEWS_
   }
 
   try {
+    const now = new Date().toISOString();
     const response = await contentfulClient!.getEntries<NewsSkeleton>({
       content_type: 'news',
       limit: perPage,
       skip: (page - 1) * perPage,
       order: ['-fields.publishedAt'],
+      'fields.publishedAt[lte]': now, // 未来日付の記事を除外
     } as any);
 
     return {
@@ -72,9 +76,11 @@ export async function getNewsPaginated(page: number = 1, perPage: number = NEWS_
 export async function getTotalNewsPages(perPage: number = NEWS_PER_PAGE): Promise<number> {
   if (USE_MOCK_DATA) return Math.ceil(MOCK_NEWS_DATA.length / perPage);
   try {
+    const now = new Date().toISOString();
     const response = await contentfulClient!.getEntries<NewsSkeleton>({
       content_type: 'news',
       limit: 1,
+      'fields.publishedAt[lte]': now,
     } as any);
     return Math.ceil(response.total / perPage);
   } catch {
@@ -205,6 +211,7 @@ export async function getAllMonthlyArchives(): Promise<MonthlyArchive[]> {
     if (USE_MOCK_DATA) {
       allNews = MOCK_NEWS_DATA;
     } else {
+      const now = new Date().toISOString();
       let skip = 0;
       while (true) {
         const response = await contentfulClient!.getEntries<NewsSkeleton>({
@@ -212,6 +219,7 @@ export async function getAllMonthlyArchives(): Promise<MonthlyArchive[]> {
           limit: 1000,
           skip,
           select: ['fields.publishedAt'],
+          'fields.publishedAt[lte]': now, // 未来日付の記事を除外
         } as any);
         allNews = allNews.concat(response.items.map((item) => transformNewsEntry(item as NewsEntry)));
         if (allNews.length >= response.total) break;
