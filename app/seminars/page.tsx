@@ -180,7 +180,7 @@ function FeaturedSeminarCard({ seminar, isPastFallback }: { seminar: News; isPas
             <span className="inline-block bg-accent-gold/20 text-accent-gold text-xs font-bold px-3 py-1 rounded-full mb-2">
               {isPastFallback ? '直近の開催' : '開催予定'}
             </span>
-            <h3 className={`text-lg md:text-xl font-bold text-white leading-snug`}>
+            <h3 className={`text-lg md:text-xl font-bold text-white leading-snug break-words`}>
               {seminar.title}
             </h3>
           </div>
