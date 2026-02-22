@@ -22,6 +22,12 @@ export function transformNewsEntry(entry: NewsEntry): News {
     title: fields.title || '',
     slug,
     publishedAt,
+    startTime: fields.startTime,
+    endTime: fields.endTime,
+    venue: fields.venue,
+    venueAddress: fields.venueAddress,
+    applyUrl: fields.applyUrl,
+    applyDeadline: fields.applyDeadline,
     coverImage: fields.coverImage?.fields?.file?.url ? {
       url: `https:${fields.coverImage.fields.file.url}`,
       title: (fields.coverImage.fields.title as string) || '',
@@ -31,8 +37,8 @@ export function transformNewsEntry(entry: NewsEntry): News {
     } : undefined,
     category: fields.category,
     bodyHtml: documentToHtmlString(fields.body, {
-      renderText: (text) => text.replace(/\n/g, '<br />'),
-    }),
+      renderText: (text: string) => text.replace(/\n/g, '<br />'),
+    } as any),
     metaDescription: fields.metaDescription,
     createdAt: entry.sys.createdAt,
     updatedAt: entry.sys.updatedAt,

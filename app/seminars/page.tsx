@@ -21,12 +21,12 @@ export default async function SeminarsPage() {
   const all = await getNewsByProjectCategory('seminars', 200);
   const now = new Date();
 
-  // 開催予定：イベントカテゴリ＋publishedAt が今日以降（開催日順）
+  // 開催予定：イベントカテゴリ＋publishedAt が今日以降（近い順）
   const upcoming = all
     .filter((n) => n.category === 'イベント' && new Date(n.publishedAt) >= now)
     .sort((a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime());
 
-  // 過去アーカイブ（新しい順）
+  // 過去アーカイブ（新しい順 = publishedAt降順）
   const past = all
     .filter((n) => !(n.category === 'イベント' && new Date(n.publishedAt) >= now))
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
@@ -165,26 +165,76 @@ function FeaturedSeminarCard({ seminar, isPastFallback }: { seminar: News; isPas
   const weekday = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
   const year = date.getFullYear();
 
+  // 時刻表示 (例: 13:00〜17:00)
+  const timeStr = seminar.startTime
+    ? seminar.endTime
+      ? `${seminar.startTime}〜${seminar.endTime}`
+      : `${seminar.startTime}〜`
+    : null;
+
+  // 申込締切
+  const deadlineStr = seminar.applyDeadline
+    ? (() => {
+        const d = new Date(seminar.applyDeadline);
+        return `${d.getMonth() + 1}月${d.getDate()}日`;
+      })()
+    : null;
+
   return (
     <article className="bg-white rounded-2xl shadow-lg border-2 border-accent-gold overflow-hidden">
-      {/* ヘッダー */}
-      <div className="bg-navy-900 px-8 py-6 flex flex-col md:flex-row md:items-center gap-4">
-        {/* 日付ブロック */}
-        <div className="shrink-0 flex items-center gap-4">
-          <div className="bg-accent-gold text-navy-900 rounded-xl px-5 py-3 text-center min-w-[80px]">
-            <div className="text-xs font-bold">{year}年</div>
-            <div className="text-3xl font-bold leading-none">{month}/{day}</div>
-            <div className="text-xs font-bold mt-0.5">（{weekday}）</div>
-          </div>
-          <div>
-            <span className="inline-block bg-accent-gold/20 text-accent-gold text-xs font-bold px-3 py-1 rounded-full mb-2">
-              {isPastFallback ? '直近の開催' : '開催予定'}
+
+      {/* ── ヘッダー帯 ── */}
+      <div className="bg-navy-900 px-8 py-7">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="inline-block bg-accent-gold text-navy-900 text-xs font-bold px-3 py-1 rounded-full">
+            {isPastFallback ? '直近の開催' : '開催予定'}
+          </span>
+          {seminar.category && (
+            <span className="inline-block bg-white/10 text-white/80 text-xs font-medium px-3 py-1 rounded-full">
+              {seminar.category}
             </span>
-            <h3 className={`text-lg md:text-xl font-bold text-white leading-snug break-words`}>
-              {seminar.title}
-            </h3>
-          </div>
+          )}
         </div>
+        <h3 className="text-xl md:text-2xl font-bold text-white leading-snug break-words">
+          {seminar.title}
+        </h3>
+      </div>
+
+      {/* ── インフォボックス ── */}
+      <div className="bg-slate-50 border-b border-gray-100 px-8 py-5">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+          {/* 日時 */}
+          <div className="flex items-start gap-3">
+            <dt className="shrink-0 text-accent-gold font-bold w-5 text-base">📅</dt>
+            <dd className="text-navy-900 font-medium">
+              {year}年{month}月{day}日（{weekday}）
+              {timeStr && <span className="ml-1 text-gray-600">{timeStr}</span>}
+            </dd>
+          </div>
+
+          {/* 会場 */}
+          {seminar.venue && (
+            <div className="flex items-start gap-3">
+              <dt className="shrink-0 text-accent-gold font-bold w-5 text-base">📍</dt>
+              <dd className="text-navy-900 font-medium">
+                {seminar.venue}
+                {seminar.venueAddress && (
+                  <span className="block text-gray-500 text-xs mt-0.5">{seminar.venueAddress}</span>
+                )}
+              </dd>
+            </div>
+          )}
+
+          {/* 申込締切 */}
+          {deadlineStr && !isPastFallback && (
+            <div className="flex items-start gap-3">
+              <dt className="shrink-0 text-accent-gold font-bold w-5 text-base">⏰</dt>
+              <dd className="text-navy-900 font-medium">
+                申込締切：{deadlineStr}
+              </dd>
+            </div>
+          )}
+        </dl>
       </div>
 
       {/* カバー画像（あれば） */}
@@ -202,7 +252,7 @@ function FeaturedSeminarCard({ seminar, isPastFallback }: { seminar: News; isPas
         </div>
       )}
 
-      {/* Body（Rich text）フル表示 */}
+      {/* ── Body（Rich text）フル表示 ── */}
       <div className="px-8 py-8">
         {seminar.metaDescription && (
           <p className="text-gray-600 mb-6 text-base leading-relaxed border-l-4 border-accent-gold pl-4 bg-amber-50 py-3 pr-4 rounded-r-lg">
@@ -221,16 +271,28 @@ function FeaturedSeminarCard({ seminar, isPastFallback }: { seminar: News; isPas
           dangerouslySetInnerHTML={{ __html: seminar.bodyHtml }}
         />
 
-        {/* 詳細ページへのリンク */}
-        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        {/* ── フッターアクション ── */}
+        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* 申込ボタン（URLあり・開催予定の場合） */}
+          {seminar.applyUrl && !isPastFallback && (
+            <a
+              href={seminar.applyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-accent-gold text-navy-900 font-bold
+                         px-7 py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-md text-base"
+            >
+              参加申込はこちら →
+            </a>
+          )}
           <Link
             href={`/news/${seminar.slug}`}
             className="inline-flex items-center gap-2 bg-navy-900 text-white font-bold
                        px-6 py-3 rounded-lg hover:bg-navy-800 transition-colors shadow-sm"
           >
-            {isPastFallback ? '開催報告を見る →' : '詳細ページを見る・申込はこちら →'}
+            {isPastFallback ? '開催報告を見る →' : '詳細を見る →'}
           </Link>
-          {!isPastFallback && (
+          {!isPastFallback && !seminar.applyUrl && (
             <span className="text-xs text-gray-400">
               ※申込方法・詳細は詳細ページをご確認ください
             </span>
