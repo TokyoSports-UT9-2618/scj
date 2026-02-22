@@ -17,11 +17,16 @@ const notSerifJP = Noto_Serif_JP({
 export default async function Home() {
   // Fetch data in parallel
   const [latestNews, seminarNews] = await Promise.all([
-    getRecentNews(3),
+    getRecentNews(4),
     getNewsByCategory('イベント', 1)
   ]);
 
   const featuredSeminar = seminarNews[0] || null;
+
+  // PickUpと重複する記事をNewsから除外して最大3件表示
+  const displayedNews = (featuredSeminar
+    ? latestNews.filter((n) => n.id !== featuredSeminar.id)
+    : latestNews).slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -94,8 +99,8 @@ export default async function Home() {
             </div>
 
             <div className="space-y-6">
-              {latestNews.length > 0 ? (
-                latestNews.map((news) => (
+              {displayedNews.length > 0 ? (
+                displayedNews.map((news) => (
                   <Link
                     href={`/news/${news.slug}`}
                     key={news.id}
@@ -145,8 +150,14 @@ export default async function Home() {
                           fill
                         />
                       ) : (
-                        <div className="w-full h-full bg-navy-800 flex items-center justify-center text-white text-opacity-50">
-                          SCJ Seminar
+                        <div className="w-full h-full bg-navy-900 flex items-center justify-center p-8">
+                          <Image
+                            src="/logo.png"
+                            alt="日本スポーツコミッション"
+                            width={200}
+                            height={80}
+                            className="object-contain opacity-70"
+                          />
                         </div>
                       )}
                       <div className="absolute top-0 right-0 bg-accent-gold text-navy-900 text-xs font-bold px-3 py-1">
